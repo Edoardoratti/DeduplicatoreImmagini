@@ -16,15 +16,20 @@ import org.opencv.core.DMatch;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
-import org.opencv.features2d.BRISK;
+import org.opencv.features2d.AKAZE;
+import org.opencv.features2d.AgastFeatureDetector;
 //import org.opencv.core.Scalar;
 import org.opencv.features2d.DescriptorMatcher;
-import org.opencv.xfeatures2d.SURF;
+import org.opencv.features2d.FastFeatureDetector;
+import org.opencv.features2d.Feature2D;
+import org.opencv.features2d.GFTTDetector;
+import org.opencv.features2d.KAZE;
+import org.opencv.features2d.MSER;
+import org.opencv.features2d.SIFT;
 //import org.opencv.imgproc.Imgproc;
 //import org.bytedeco.opencv.opencv_core.*;
 //import org.bytedeco.opencv.opencv_imgproc.*;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.xfeatures2d.FREAK;
 
 
 /*
@@ -63,7 +68,7 @@ public class Deduplicatore {
     
     static int size;
 
-    public List<File> getEveryImages(){
+    public List<File> getImages(){
         List<File> fileslist = new ArrayList<>();
         
         for (File dir : directories ) {
@@ -89,27 +94,27 @@ public class Deduplicatore {
         }
     }
     
-//    public static void compareImage(List<File> images){
-//        getListSize(images);
-//        System.out.println(size);
-//        misuration = new short[size][size];
-//        for (int i = 0; i < size; i++) {
-//            for (int j = 0; j < size; j++) {
-//                if(images.get(i).equals(images.get(j))){
-//                    misuration[i][j] = 100;
-//                }
-//            }
-//        }
-//        for(short[] i : misuration){
-//            for(short j : i){
-//                System.out.printf("%03d ", j);
-//            }
-//            //System.lineSeparator();
-//            System.out.println("");
-//        }
-//    }
+    public static void compareImage(List<File> images){
+        getListSize(images);
+        System.out.println(size);
+        misuration = new short[size][size];
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if(images.get(i).equals(images.get(j))){
+                    misuration[i][j] = 100;
+                }
+            }
+        }
+        for(short[] i : misuration){
+            for(short j : i){
+                System.out.printf("%03d ", j);
+            }
+            //System.lineSeparator();
+            System.out.println("");
+        }
+    }
     
-    public static void compareImage1(File file1, File file2) throws Exception {
+    public static void compareEqualImages(File file1, File file2) throws Exception {
         BufferedImage img1 = ImageIO.read(file1);
         BufferedImage img2 = ImageIO.read(file2);
         int w1 = img1.getWidth();
@@ -143,10 +148,10 @@ public class Deduplicatore {
         try{
             Deduplicatore d = new Deduplicatore("E:\\306\\Immagini");
             d.getDirectories(d.rootPath);
-            List<File> images = d.getEveryImages();
-            for(File ls : images){
-                System.out.println(ls);
-            }
+            List<File> images = d.getImages();
+//            for(File ls : images){
+//                System.out.println(ls);
+//            }
             //compareImage(images);
 
             File f1 = new File("E:\\306\\Immagini\\Test\\beach.jpg");
@@ -164,50 +169,64 @@ public class Deduplicatore {
     }
     
     public static int compareImage2(){
-        int tollerance = 400;
+        float threshold = 400f;
+        int nOctaves = 4;
         int retVal = 0;
+        int totalVal = 0;
         long startTime = System.currentTimeMillis();
-        Mat img1 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\beach.jpg");
-        Mat img2 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\beachModified.jpg");
+        
+        KAZE detector = KAZE.create(false, false, threshold, nOctaves);
+        //AKAZE detect = AKAZE.create(AKAZE.DESCRIPTOR_KAZE, 0, nOctaves, threshold);
+        SIFT detect = SIFT.create(0, 3);
+        
+        Mat img1 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\beach.jpg", Imgcodecs.IMREAD_GRAYSCALE);
+        //Mat img2 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\beachModified.jpg", Imgcodecs.IMREAD_GRAYSCALE);
+        //Mat img2 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\beachModified1.jpg", Imgcodecs.IMREAD_GRAYSCALE);
+        //Mat img2 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\beachMirror.jpg", Imgcodecs.IMREAD_GRAYSCALE);
+        //Mat img2 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\fddf.png", Imgcodecs.IMREAD_GRAYSCALE);
+        //Mat img2 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\d.jpg", Imgcodecs.IMREAD_GRAYSCALE);
+        Mat img2 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\f.jpg", Imgcodecs.IMREAD_GRAYSCALE);
         MatOfKeyPoint keypoints1 = new MatOfKeyPoint();
         MatOfKeyPoint keypoints2 = new MatOfKeyPoint();
         Mat descriptors1 = new Mat();
-        Mat descriptors2 = new Mat();
-        //FREAK detector = FREAK.create(true, true, 22.0f, 4);
-        //SURF detector = SURF.create(tollerance, 4, 3, false, false);
+        Mat descriptors2 = new Mat();  
+        Mat dec = new Mat();
+        
+        detect.detectAndCompute(img1, new Mat(), keypoints1, descriptors1);
+        detect.detectAndCompute(img2, new Mat(), keypoints2, descriptors2);
         
         
-        BRISK detector = BRISK.create(tollerance, 4);
-        
-        
-        detector.detect(img1, keypoints1);
-        detector.detect(img2, keypoints2);
-        detector.detectAndCompute(img1, new Mat(), keypoints1, descriptors1);
-        detector.detectAndCompute(img2, new Mat(), keypoints2, descriptors2);
-        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
+        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);//BRUTEFORCE_HAMMING
         MatOfDMatch matches = new MatOfDMatch();
+        matcher.match(descriptors1, descriptors2 ,matches);
+        DMatch[] match = matches.toArray();
+        
         if (descriptors2.cols() == descriptors1.cols()) {
-         matcher.match(descriptors1, descriptors2 ,matches);
-         // Check matches of key points
-         DMatch[] match = matches.toArray();
-         double max_dist = 0;
-         double min_dist = 100;
-
-         for (int i = 0; i < descriptors1.rows(); i++) { 
-          double dist = match[i].distance;
-             if( dist < min_dist ) min_dist = dist;
-             if( dist > max_dist ) max_dist = dist;
-         }
-         System.out.println("max_dist=" + max_dist + ", min_dist=" + min_dist);
+            
+            // Check matches of key points
+            double max_dist = 0;
+            double min_dist = Integer.MAX_VALUE;
+            System.out.println("Descriptor.rows: " + descriptors1.rows());
+            for (int i = 0; i < descriptors1.rows(); i++) { 
+             double dist = match[i].distance;
+                if( dist < min_dist ) min_dist = dist;
+                if( dist > max_dist ) max_dist = dist;
+            }
+            System.out.println("max_dist=" + max_dist + ", min_dist=" + min_dist);
 
             // Extract good images (distances are under 10)
-         for (int i = 0; i < descriptors1.rows(); i++) {
-          if (match[i].distance <= 10) {
-           retVal++;
-          }
-         }
-         System.out.println("matching count=" + retVal);
+            for (int i = 0; i < descriptors1.rows(); i++) {
+                totalVal++;
+                if (match[i].distance <= 300) {
+                    retVal++;
+            }
         }
+        System.out.println("matching count=" + ((double)retVal / (double)totalVal) * 100);
+        System.out.println((double)match.length / (double)descriptors1.total() *100);
+        }
+
+        System.out.println("Mat vuoto: " + dec);
+        System.out.println("Mat desc1: " + descriptors1.size());
 
         long estimatedTime = System.currentTimeMillis() - startTime;
         System.out.println("estimatedTime=" + estimatedTime + "ms");
