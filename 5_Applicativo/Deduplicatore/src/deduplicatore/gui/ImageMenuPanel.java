@@ -29,7 +29,7 @@ public class ImageMenuPanel extends javax.swing.JPanel {
         imgdlButton = new javax.swing.JButton();
         picturePanel = new javax.swing.JPanel();
         imgnameLabel = new javax.swing.JLabel();
-        jPanel2 = new javax.swing.JPanel();
+        imagePanel = new javax.swing.JPanel();
 
         seriesPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
@@ -91,14 +91,14 @@ public class ImageMenuPanel extends javax.swing.JPanel {
 
         imgnameLabel.setText("jLabel1");
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout imagePanelLayout = new javax.swing.GroupLayout(imagePanel);
+        imagePanel.setLayout(imagePanelLayout);
+        imagePanelLayout.setHorizontalGroup(
+            imagePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 0, Short.MAX_VALUE)
         );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        imagePanelLayout.setVerticalGroup(
+            imagePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 0, Short.MAX_VALUE)
         );
 
@@ -109,7 +109,7 @@ public class ImageMenuPanel extends javax.swing.JPanel {
             .addComponent(imgnameLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 484, Short.MAX_VALUE)
             .addGroup(picturePanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(imagePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
         picturePanelLayout.setVerticalGroup(
@@ -117,7 +117,7 @@ public class ImageMenuPanel extends javax.swing.JPanel {
             .addGroup(picturePanelLayout.createSequentialGroup()
                 .addComponent(imgnameLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(imagePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -150,10 +150,10 @@ public class ImageMenuPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel filesPanel;
     private javax.swing.JTextField filesSearchField;
+    private javax.swing.JPanel imagePanel;
     private javax.swing.JButton imgdeleteButton;
     private javax.swing.JButton imgdlButton;
     private javax.swing.JLabel imgnameLabel;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JToolBar jToolBar1;
     private javax.swing.JPanel picturePanel;
@@ -162,4 +162,6 @@ public class ImageMenuPanel extends javax.swing.JPanel {
     private javax.swing.JScrollPane seriesScrollPane;
     private javax.swing.JSpinner seriesSpinner;
     // End of variables declaration//GEN-END:variables
+
+    
 }
