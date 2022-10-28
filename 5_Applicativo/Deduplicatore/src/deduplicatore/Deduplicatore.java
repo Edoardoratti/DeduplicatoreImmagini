@@ -16,15 +16,8 @@ import org.opencv.core.DMatch;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
-import org.opencv.features2d.AKAZE;
-import org.opencv.features2d.AgastFeatureDetector;
 //import org.opencv.core.Scalar;
 import org.opencv.features2d.DescriptorMatcher;
-import org.opencv.features2d.FastFeatureDetector;
-import org.opencv.features2d.Feature2D;
-import org.opencv.features2d.GFTTDetector;
-import org.opencv.features2d.KAZE;
-import org.opencv.features2d.MSER;
 import org.opencv.features2d.SIFT;
 //import org.opencv.imgproc.Imgproc;
 //import org.bytedeco.opencv.opencv_core.*;
@@ -64,7 +57,11 @@ public class Deduplicatore {
     
     static List <File> directories = new ArrayList<>();
     
-    static short[][] misuration;
+    static int[][] misuration;
+    
+    static int[][] series;
+    
+    static String[][] imageMatrix;
     
     static int size;
 
@@ -93,27 +90,7 @@ public class Deduplicatore {
             }
         }
     }
-    
-    public static void compareImage(List<File> images){
-        getListSize(images);
-        System.out.println(size);
-        misuration = new short[size][size];
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                if(images.get(i).equals(images.get(j))){
-                    misuration[i][j] = 100;
-                }
-            }
-        }
-        for(short[] i : misuration){
-            for(short j : i){
-                System.out.printf("%03d ", j);
-            }
-            //System.lineSeparator();
-            System.out.println("");
-        }
-    }
-    
+      
     public static void compareEqualImages(File file1, File file2) throws Exception {
         BufferedImage img1 = ImageIO.read(file1);
         BufferedImage img2 = ImageIO.read(file2);
@@ -144,19 +121,100 @@ public class Deduplicatore {
       
    }
     
+    public static boolean areEqualSeries(int a[], int b[]){
+        List<Integer> c = Arrays.stream(a).boxed().toList();
+        List<Integer> d = Arrays.stream(b).boxed().toList();
+        
+        for (int i : c){
+            for(int j : d){
+                if(i > 100){
+                    
+                }
+                if(i == j){
+                    d.remove(j);
+                    break;
+                }
+            }
+        }
+        return d.isEmpty();
+    }
+    
+    public static void analyseImage(List<File> images){
+        getListSize(images);
+        imageListToMatrix(images);
+        misuration = new int[size][size];
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if(images.get(i).equals(images.get(j))){
+                    misuration[i][j] = i + 101; //valore non valevole nel contesto per segnalare la base
+                }else{
+                    int misure = compareImage(images.get(i).toString(),images.get(j).toString());
+                    if(misure >= 20){
+                        misuration[i][j] = misure;
+                    }
+                }
+            }
+        }
+        swapBases();
+    }
+    
+    public static void imageListToMatrix(List<File> images){
+        imageMatrix = new String[size][size];
+        for (int i = 1; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                imageMatrix[i][j] = images.get(j).toString();
+            }
+        }
+    }
+    
+    public static void swapBases(){
+        int base = 0;
+        for (int i = 1; i < size; i++) {
+            String swap1 = imageMatrix[0][i];
+            imageMatrix[0][i] = imageMatrix[base][i];
+            imageMatrix[base][i] = swap1;
+            int swap2 = misuration[0][i];
+            misuration[0][i] = misuration[base][i];
+            misuration[base][i] = swap2;
+            base++;
+        }
+        for (int i = 1; i < size; i++) {
+            
+        }
+        
+        for (String s : imageMatrix[0]) {
+            System.out.println(s);
+        }
+        
+        for(int[] i : misuration){
+            for(int j : i){
+                System.out.printf("%03d ", j);
+            }
+            System.out.println("");
+        }
+    }
+    
     public static void main(String[] args) throws Exception {
         try{
-            Deduplicatore d = new Deduplicatore("E:\\306\\Immagini");
+            Deduplicatore d = new Deduplicatore("E:\\306\\Immagini\\Test");
             d.getDirectories(d.rootPath);
             List<File> images = d.getImages();
-//            for(File ls : images){
-//                System.out.println(ls);
-//            }
-            //compareImage(images);
-
-            File f1 = new File("E:\\306\\Immagini\\Test\\beach.jpg");
-            File f2 = new File("E:\\306\\Immagini\\Test\\beachModified.jpg"); 
-            compareImage2();
+            for(File ls : images){
+                System.out.println(ls);
+            }
+            analyseImage(images);            
+            
+            String p1 = "E:\\306\\Immagini\\Test\\beach.jpg";
+            //String p2 = "E:\\306\\Immagini\\Test\\beachCopia.jpg";
+            //String p2 = "E:\\306\\Immagini\\Test\\beachModified.jpg";
+            //String p2 = "E:\\306\\Immagini\\Test\\beachModified1.jpg";
+            String p2 = "E:\\306\\Immagini\\Test\\beachMirror.jpg";
+            //String p2 = "E:\\306\\Immagini\\Test\\fddf.png";
+            //String p2 = "E:\\306\\Immagini\\Test\\blackSpray.jpg";
+            //String p2 = "E:\\306\\Immagini\\Test\\pastel.jpg";
+            //String p2 = "E:\\306\\Immagini\\Test\\pastelFull.jpg";
+            //String p2 = "E:\\306\\Immagini\\Test\\sand.jpg";
+            compareImage(p1, p2);
             
         }catch(NullPointerException e){
             throw new IllegalArgumentException("Errore durante la lettura del file");         
@@ -168,69 +226,62 @@ public class Deduplicatore {
         directories.add(new File(root));
     }
     
-    public static int compareImage2(){
-        float threshold = 400f;
-        int nOctaves = 4;
+    public static int compareImage(String p1, String p2){
         int retVal = 0;
         int totalVal = 0;
         long startTime = System.currentTimeMillis();
+       
+        SIFT detector = SIFT.create(0, 3);
         
-        KAZE detector = KAZE.create(false, false, threshold, nOctaves);
-        //AKAZE detect = AKAZE.create(AKAZE.DESCRIPTOR_KAZE, 0, nOctaves, threshold);
-        SIFT detect = SIFT.create(0, 3);
-        
-        Mat img1 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\beach.jpg", Imgcodecs.IMREAD_GRAYSCALE);
-        //Mat img2 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\beachModified.jpg", Imgcodecs.IMREAD_GRAYSCALE);
-        //Mat img2 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\beachModified1.jpg", Imgcodecs.IMREAD_GRAYSCALE);
-        //Mat img2 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\beachMirror.jpg", Imgcodecs.IMREAD_GRAYSCALE);
-        //Mat img2 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\fddf.png", Imgcodecs.IMREAD_GRAYSCALE);
-        //Mat img2 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\d.jpg", Imgcodecs.IMREAD_GRAYSCALE);
-        Mat img2 = Imgcodecs.imread("E:\\306\\Immagini\\Test\\f.jpg", Imgcodecs.IMREAD_GRAYSCALE);
+        Mat img1 = Imgcodecs.imread(p1);
+        Mat img2 = Imgcodecs.imread(p2);
         MatOfKeyPoint keypoints1 = new MatOfKeyPoint();
         MatOfKeyPoint keypoints2 = new MatOfKeyPoint();
         Mat descriptors1 = new Mat();
         Mat descriptors2 = new Mat();  
-        Mat dec = new Mat();
         
-        detect.detectAndCompute(img1, new Mat(), keypoints1, descriptors1);
-        detect.detectAndCompute(img2, new Mat(), keypoints2, descriptors2);
+        detector.detectAndCompute(img1, new Mat(), keypoints1, descriptors1);
+        detector.detectAndCompute(img2, new Mat(), keypoints2, descriptors2);
         
         
-        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);//BRUTEFORCE_HAMMING
-        MatOfDMatch matches = new MatOfDMatch();
-        matcher.match(descriptors1, descriptors2 ,matches);
-        DMatch[] match = matches.toArray();
+//        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);//BRUTEFORCE_HAMMING
+//        MatOfDMatch matches = new MatOfDMatch();
+//        matcher.match(descriptors1, descriptors2 ,matches);
+//        DMatch[] match = matches.toArray();
         
-        if (descriptors2.cols() == descriptors1.cols()) {
+//        if (descriptors2.cols() == descriptors1.cols()) {
             
             // Check matches of key points
-            double max_dist = 0;
-            double min_dist = Integer.MAX_VALUE;
-            System.out.println("Descriptor.rows: " + descriptors1.rows());
-            for (int i = 0; i < descriptors1.rows(); i++) { 
-             double dist = match[i].distance;
-                if( dist < min_dist ) min_dist = dist;
-                if( dist > max_dist ) max_dist = dist;
-            }
-            System.out.println("max_dist=" + max_dist + ", min_dist=" + min_dist);
+//            double max_dist = 0;
+//            double min_dist = Integer.MAX_VALUE;
+//            System.out.println("Descriptor.rows: " + descriptors1.rows());
+//            System.out.println("Match.length: " + match.length);
+//            for (int i = 0; i < descriptors1.rows(); i++) { 
+//             double dist = match[i].distance;
+//                if( dist < min_dist ) min_dist = dist;
+//                if( dist > max_dist ) max_dist = dist;
+//            }
+//            System.out.println("max_dist=" + max_dist + ", min_dist=" + min_dist);
+//
+//            // Extract good images (distances are under 10)
+//            for (int i = 0; i < descriptors1.rows(); i++) {
+//                totalVal++;
+//                if (match[i].distance <= (min_dist + max_dist) / 2) {// 300
+//                    retVal++;
+//                }
+//            }
+        double max = Math.max(descriptors2.rows(),descriptors1.rows() );
+        double min = Math.min(descriptors2.rows(),descriptors1.rows() );
+        //System.out.println("matching count=" + ((double)retVal / (double)totalVal) * 100);
+        System.out.println("Testing  " + min / max * 100);
+        //}
 
-            // Extract good images (distances are under 10)
-            for (int i = 0; i < descriptors1.rows(); i++) {
-                totalVal++;
-                if (match[i].distance <= 300) {
-                    retVal++;
-            }
-        }
-        System.out.println("matching count=" + ((double)retVal / (double)totalVal) * 100);
-        System.out.println((double)match.length / (double)descriptors1.total() *100);
-        }
+        //System.out.println("Mat desc1: " + descriptors1.size());
 
-        System.out.println("Mat vuoto: " + dec);
-        System.out.println("Mat desc1: " + descriptors1.size());
-
-        long estimatedTime = System.currentTimeMillis() - startTime;
-        System.out.println("estimatedTime=" + estimatedTime + "ms");
-        return retVal;
+        //long estimatedTime = System.currentTimeMillis() - startTime;
+        //System.out.println("estimatedTime=" + estimatedTime + "ms");
+        //return match.length;
+        return (int)((min / max) * 100);
     }
 //    public int SendImageCompare(String fileSource, String fileDestination) throws IOException{
 //
