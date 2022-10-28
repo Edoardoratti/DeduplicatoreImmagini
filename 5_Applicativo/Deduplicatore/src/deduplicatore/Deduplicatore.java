@@ -168,7 +168,8 @@ public class Deduplicatore {
     }
     
     public static void swapBases(){
-        int base = 0;
+        int base = 1;
+        
         for (int i = 1; i < size; i++) {
             String swap1 = imageMatrix[0][i];
             imageMatrix[0][i] = imageMatrix[base][i];
@@ -177,9 +178,6 @@ public class Deduplicatore {
             misuration[0][i] = misuration[base][i];
             misuration[base][i] = swap2;
             base++;
-        }
-        for (int i = 1; i < size; i++) {
-            
         }
         
         for (String s : imageMatrix[0]) {
@@ -199,9 +197,9 @@ public class Deduplicatore {
             Deduplicatore d = new Deduplicatore("E:\\306\\Immagini\\Test");
             d.getDirectories(d.rootPath);
             List<File> images = d.getImages();
-            for(File ls : images){
-                System.out.println(ls);
-            }
+//            for(File ls : images){
+//                System.out.println(ls);
+//            }
             analyseImage(images);            
             
             String p1 = "E:\\306\\Immagini\\Test\\beach.jpg";
