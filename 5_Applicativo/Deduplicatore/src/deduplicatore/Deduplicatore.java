@@ -59,11 +59,15 @@ public class Deduplicatore {
     
     static int[][] misuration;
     
-    static int[][] series;
+    static String[][] series;
     
     static String[][] imageMatrix;
     
+    static List<File> images;
+    
     static int size;
+    
+    static int[] similar;
 
     public List<File> getImages(){
         List<File> fileslist = new ArrayList<>();
@@ -121,50 +125,89 @@ public class Deduplicatore {
       
    }
     
-    public static boolean areEqualSeries(int a[], int b[]){
-        List<Integer> c = Arrays.stream(a).boxed().toList();
-        List<Integer> d = Arrays.stream(b).boxed().toList();
-        
-        for (int i : c){
-            for(int j : d){
-                if(i > 100){
-                    
-                }
-                if(i == j){
-                    d.remove(j);
-                    break;
+    public static void removeRedundantSeries(){
+        for (int i = 0; i < size; i++){
+            for(int j = 0; j < size; i++){
+                if(misuration[i][j] >= 30 && similar[i] > similar[j]){
+                    deleteRow(i);
                 }
             }
         }
-        return d.isEmpty();
+    }
+    public static void deleteRow(int i){
+        for (int j = 0; j < size; j++){
+            misuration[i][j] = -2;
+        }
+    }
+    public static void countBetterSimilitude(int a[], int b[]){
+        similar = new int[size];
+        for (int i = 0; i < size; i++){
+            int simCnt = 0;
+            for(int j = 0; j < size; i++){
+                if(misuration[i][j] >= 30){
+                    simCnt++;
+                }
+            }
+            similar[i] = simCnt;
+        }
     }
     
-    public static void analyseImage(List<File> images){
+    
+    
+    public static void analyseImage(){
         getListSize(images);
         imageListToMatrix(images);
         misuration = new int[size][size];
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 if(images.get(i).equals(images.get(j))){
-                    misuration[i][j] = i + 101; //valore non valevole nel contesto per segnalare la base
+                    misuration[i][j] = -1; //valore non valevole nel contesto per segnalare la base
                 }else{
-                    int misure = compareImage(images.get(i).toString(),images.get(j).toString());
-                    if(misure >= 20){
-                        misuration[i][j] = misure;
+                    if(misuration[j][i] == 0){
+                        misuration[i][j] = compareImage(images.get(i).toString(),images.get(j).toString());
+                        misuration[j][i] = misuration[i][j];
                     }
                 }
             }
         }
-        swapBases();
+        removeRedundantSeries();
+        for(int[] i : misuration){
+            for(int j : i){
+                System.out.printf("%03d ", j);
+            }
+            System.out.println("");
+        }
     }
     
+//    public static void createSeries(){
+//        series = new String[size][size];
+//        for (int i = 0; i < size; i++) {
+//            for (int j = 0; j < size; j++) {
+//                if(misuration[i][j] == -1){
+//                    series[i][j] = images.get(i).toString();
+//                }else if(misuration[i][j] >= 20){
+//                    series[i][j] =  5;
+//                }else{
+//                    series[i][j] = -2 + "";
+//                }
+//            }
+//        }
+//    }
+    
     public static void imageListToMatrix(List<File> images){
+        getListSize(images);
         imageMatrix = new String[size][size];
         for (int i = 1; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 imageMatrix[i][j] = images.get(j).toString();
             }
         }
+//        for(String[] f : imageMatrix){
+//            System.out.println("d");
+//            for(String s : f){
+//                System.out.println(s); 
+//            }
+//        }
     }
     
     public static void swapBases(){
@@ -183,30 +226,24 @@ public class Deduplicatore {
         for (String s : imageMatrix[0]) {
             System.out.println(s);
         }
-        
-        for(int[] i : misuration){
-            for(int j : i){
-                System.out.printf("%03d ", j);
-            }
-            System.out.println("");
-        }
     }
     
     public static void main(String[] args) throws Exception {
         try{
-            Deduplicatore d = new Deduplicatore("E:\\306\\Immagini\\Test");
+            Deduplicatore d = new Deduplicatore("E:\\306\\Immagini\\Test\\test");
             d.getDirectories(d.rootPath);
-            List<File> images = d.getImages();
+            images = d.getImages();
 //            for(File ls : images){
 //                System.out.println(ls);
 //            }
-            analyseImage(images);            
+            analyseImage();
+            //imageListToMatrix(images);
             
             String p1 = "E:\\306\\Immagini\\Test\\beach.jpg";
-            //String p2 = "E:\\306\\Immagini\\Test\\beachCopia.jpg";
+            String p2 = "E:\\306\\Immagini\\Test\\beachCopia.jpg";
             //String p2 = "E:\\306\\Immagini\\Test\\beachModified.jpg";
             //String p2 = "E:\\306\\Immagini\\Test\\beachModified1.jpg";
-            String p2 = "E:\\306\\Immagini\\Test\\beachMirror.jpg";
+            //String p2 = "E:\\306\\Immagini\\Test\\beachMirror.jpg";
             //String p2 = "E:\\306\\Immagini\\Test\\fddf.png";
             //String p2 = "E:\\306\\Immagini\\Test\\blackSpray.jpg";
             //String p2 = "E:\\306\\Immagini\\Test\\pastel.jpg";
