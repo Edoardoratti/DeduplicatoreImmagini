@@ -122,3 +122,34 @@
 //import org.opencv.features2d.SIFT;
 //import org.opencv.imgcodecs.Imgcodecs;
 
+
+//
+//Nel MainFrame
+//
+//        drawPanel.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+//            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+//                drawPanelPropertyChange(evt);
+//            }
+//        });
+//		
+//		...
+//		
+//    private void drawPanelPropertyChange(java.beans.PropertyChangeEvent evt) {                                         
+//        this.updateDebug();
+//        this.updateAutosave();
+//        this.updateStatusBar();
+//        this.updateCutsList();
+//    }  		
+//	
+//Nel DrawPanel
+//
+//    private void raiseChange() {
+//        PropertyChangeEvent event = new PropertyChangeEvent(this, "c", -1, 1);
+//        PropertyChangeListener[] listeners = this.getPropertyChangeListeners();
+//        synchronized (listeners) {
+//            for (PropertyChangeListener e : listeners) {
+//                e.propertyChange(event);
+//            }
+//        }
+//    }
+

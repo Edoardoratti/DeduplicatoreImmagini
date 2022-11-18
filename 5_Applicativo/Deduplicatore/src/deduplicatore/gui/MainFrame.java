@@ -1,4 +1,5 @@
 package deduplicatore.gui;
+import deduplicatore.Deduplicatore;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -11,14 +12,15 @@ import javax.imageio.ImageIO;
  * 
  */
 public class MainFrame extends JFrame {
-    //Creates new form MainFrame
+    
+    private int buttonState = 2;
+    
     public MainFrame() {
-        
         initComponents();
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
     private void initComponents() {
 
         jLabel1 = new javax.swing.JLabel();
@@ -38,14 +40,14 @@ public class MainFrame extends JFrame {
             }
         });
 
-        jButton1.setText("jButton1");
+        jButton1.setText("Start");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
-        jLabel2.setText("jLabel2");
+        jLabel2.setText("0%");
 
         jLabel3.setFont(new java.awt.Font("Segoe UI", 0, 36)); // NOI18N
         jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -92,32 +94,48 @@ public class MainFrame extends JFrame {
         );
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
+    }// </editor-fold>                         
 
-    private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
+    private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {                                            
         // TODO add your handling code here:
-    }//GEN-LAST:event_jTextField1ActionPerformed
+    }  
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        String s = jTextField1.getText();
-        jTextField1.setText("Ciao" + s);
+        String rootPath = jTextField1.getText();
+        
+        Deduplicatore d = new Deduplicatore(rootPath);
+        d.startProgram(d);
+        imageMenuPanel1.setDeduplicatore(d);
+        imageMenuPanel1.displaySeries();
+        
+//        if(buttonState == 1){
+//            jTextField1.setText("Stop");
+//            buttonState++;
+//            //Stop
+//        }else if(buttonState == 2){
+//            jTextField1.setText("Resume");
+//            buttonState = 1;
+//            //Resume
+//        }else if(buttonState == 0){
+//            jTextField1.setText("Start");
+//            buttonState++;
+//            //Start
+//        }
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
+//    public void displaySeries(){
+//        imageMenuPanel1.displaySeries();
+//        
+//    }
+    
+    //E:\\306\\Immagini\\Test\\test\\Test
+    
     public static void main(String args[]) throws IOException {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new MainFrame().setVisible(true);
             }
         });
-        //imageMenuPanel1.imagePanel
-        BufferedImage pic = ImageIO.read(new File("E:\\306\\Immagini\\Test\\beach.jpg"));
-        MainFrame mF = new MainFrame();
-        mF.imageMenuPanel1.add(new JLabel(new ImageIcon(pic)));
-        
-        
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

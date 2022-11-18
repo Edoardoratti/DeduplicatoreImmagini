@@ -1,27 +1,17 @@
 package deduplicatore;
 
-import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.nio.*;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
-import javax.imageio.ImageIO;
 import org.opencv.core.Core;
 import org.opencv.core.DMatch;
-//import org.opencv.core.DMatch;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
-//import org.opencv.core.Scalar;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.SIFT;
-//import org.opencv.imgproc.Imgproc;
-//import org.bytedeco.opencv.opencv_core.*;
-//import org.bytedeco.opencv.opencv_imgproc.*;
 import org.opencv.imgcodecs.Imgcodecs;
 
 
@@ -48,30 +38,26 @@ public class Deduplicatore {
             for (final String ext : EXTENSIONS) {
                 
                 if (name.endsWith("." + ext)) {
-                    return (true);
+                    return true;
                 }
             }
-            return (false);
+            return false;
         }
     };
+    public static final int TOLLERANCE = 30;
     
-    static List <File> directories = new ArrayList<>();
+    public List <File> directories = new ArrayList<>();
     
-    static int[][] misuration;
+    public int[][] misuration;
     
-    static String[][] series;
+    public List<File> images;
     
-    static String[][] imageMatrix;
+    public int size;
     
-    static List<File> images;
-    
-    static int size;
-    
-    static int[] similar;
+    public int[] similar;
 
     public List<File> getImages(){
         List<File> fileslist = new ArrayList<>();
-        
         for (File dir : directories ) {
             File[] temp = dir.listFiles(FILTER);
             fileslist.addAll(Arrays.asList(temp));
@@ -79,8 +65,8 @@ public class Deduplicatore {
         return fileslist;
     }
     
-    public static void getListSize(List<File> images){
-        size = images.size();
+    public void getListSize(List<File> images){
+        this.size = images.size();
     }
     
     public void getDirectories(String path){
@@ -94,57 +80,30 @@ public class Deduplicatore {
             }
         }
     }
-      
-    public static void compareEqualImages(File file1, File file2) throws Exception {
-        BufferedImage img1 = ImageIO.read(file1);
-        BufferedImage img2 = ImageIO.read(file2);
-        int w1 = img1.getWidth();
-        int h1 = img1.getHeight();
-           long diff = 0;
-           for (int j = 0; j < h1; j++) {
-              for (int i = 0; i < w1; i++) {
-                 //Getting the RGB values of a pixel
-                 int pixel1 = img1.getRGB(i, j);
-                 Color color1 = new Color(pixel1, true);
-                 int r1 = color1.getRed();
-                 int g1 = color1.getGreen();
-                 int b1 = color1.getBlue();
-                 int pixel2 = img2.getRGB(i, j);
-                 Color color2 = new Color(pixel2, true);
-                 int r2 = color2.getRed();
-                 int g2 = color2.getGreen();
-                 int b2= color2.getBlue();
-                 //sum of differences of RGB values of the two images
-                 long data = Math.abs(r1-r2)+Math.abs(g1-g2)+ Math.abs(b1-b2);
-                 diff = diff+data;
-              }
-           }
-           double avg = diff/(w1*h1*3);
-           double percentage = (avg/255)*100;
-           System.out.println("Difference: "+percentage);
-      
-   }
     
-    public static void removeRedundantSeries(){
+    public void removeRedundantSeries(){
+        countBetterSimilitude();
         for (int i = 0; i < size; i++){
-            for(int j = 0; j < size; i++){
-                if(misuration[i][j] >= 30 && similar[i] > similar[j]){
-                    deleteRow(i);
+            for(int j = 0; j < size; j++){
+                if(misuration[i][j] >= TOLLERANCE && similar[i] >= similar[j]){
+                    deleteRow(j);
                 }
             }
         }
     }
-    public static void deleteRow(int i){
+    
+    public void deleteRow(int i){
         for (int j = 0; j < size; j++){
             misuration[i][j] = -2;
         }
     }
-    public static void countBetterSimilitude(int a[], int b[]){
+    
+    public void countBetterSimilitude(){
         similar = new int[size];
         for (int i = 0; i < size; i++){
             int simCnt = 0;
-            for(int j = 0; j < size; i++){
-                if(misuration[i][j] >= 30){
+            for(int j = 0; j < size; j++){
+                if(misuration[i][j] >= TOLLERANCE){
                     simCnt++;
                 }
             }
@@ -152,11 +111,8 @@ public class Deduplicatore {
         }
     }
     
-    
-    
-    public static void analyseImage(){
+    public void analyseImage(){
         getListSize(images);
-        imageListToMatrix(images);
         misuration = new int[size][size];
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
@@ -179,52 +135,13 @@ public class Deduplicatore {
         }
     }
     
-//    public static void createSeries(){
-//        series = new String[size][size];
-//        for (int i = 0; i < size; i++) {
-//            for (int j = 0; j < size; j++) {
-//                if(misuration[i][j] == -1){
-//                    series[i][j] = images.get(i).toString();
-//                }else if(misuration[i][j] >= 20){
-//                    series[i][j] =  5;
-//                }else{
-//                    series[i][j] = -2 + "";
-//                }
-//            }
-//        }
-//    }
-    
-    public static void imageListToMatrix(List<File> images){
-        getListSize(images);
-        imageMatrix = new String[size][size];
-        for (int i = 1; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                imageMatrix[i][j] = images.get(j).toString();
-            }
-        }
-//        for(String[] f : imageMatrix){
-//            System.out.println("d");
-//            for(String s : f){
-//                System.out.println(s); 
-//            }
-//        }
-    }
-    
-    public static void swapBases(){
-        int base = 1;
-        
-        for (int i = 1; i < size; i++) {
-            String swap1 = imageMatrix[0][i];
-            imageMatrix[0][i] = imageMatrix[base][i];
-            imageMatrix[base][i] = swap1;
-            int swap2 = misuration[0][i];
-            misuration[0][i] = misuration[base][i];
-            misuration[base][i] = swap2;
-            base++;
-        }
-        
-        for (String s : imageMatrix[0]) {
-            System.out.println(s);
+    public void startProgram(Deduplicatore d){
+        try{
+            d.getDirectories(d.rootPath);
+            images = d.getImages();
+            analyseImage();
+        }catch(NullPointerException e){
+            throw new IllegalArgumentException("Path non valevole");  
         }
     }
     
@@ -232,12 +149,11 @@ public class Deduplicatore {
         try{
             Deduplicatore d = new Deduplicatore("E:\\306\\Immagini\\Test\\test");
             d.getDirectories(d.rootPath);
-            images = d.getImages();
+            d.images = d.getImages();
 //            for(File ls : images){
-//                System.out.println(ls);
+//                System.out.println(ls); // stampa delle path
 //            }
-            analyseImage();
-            //imageListToMatrix(images);
+            d.analyseImage();
             
             String p1 = "E:\\306\\Immagini\\Test\\beach.jpg";
             String p2 = "E:\\306\\Immagini\\Test\\beachCopia.jpg";
@@ -249,10 +165,10 @@ public class Deduplicatore {
             //String p2 = "E:\\306\\Immagini\\Test\\pastel.jpg";
             //String p2 = "E:\\306\\Immagini\\Test\\pastelFull.jpg";
             //String p2 = "E:\\306\\Immagini\\Test\\sand.jpg";
-            compareImage(p1, p2);
+            //compareImage(p1, p2);
             
         }catch(NullPointerException e){
-            throw new IllegalArgumentException("Errore durante la lettura del file");         
+            throw new IllegalArgumentException("Errore durante l'analisi");  
         }
     }
     
