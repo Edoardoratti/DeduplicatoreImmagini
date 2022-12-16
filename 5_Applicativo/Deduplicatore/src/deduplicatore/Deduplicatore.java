@@ -12,12 +12,12 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.features2d.SIFT;
 import org.opencv.imgcodecs.Imgcodecs;
-//import org.bytedeco.javacv.OpenCVFrameGrabber;
 
 
 /*
@@ -36,7 +36,6 @@ public class Deduplicatore extends MainFrame {
     public static final String[] EXTENSIONS = new String[]{
         "jpg", "png", "webp", "PNG"
     };
-    public final String rootPath;
 
     static final FilenameFilter FILTER = new FilenameFilter() {
         @Override
@@ -50,21 +49,26 @@ public class Deduplicatore extends MainFrame {
             return false;
         }
     };
-    public static final int TOLLERANCE = 30;
     
-    public static final int DELETED_ROW = -2;
-
+    //tolleranza percentuale della scansione
+    public static final int TOLLERANCE = 30; 
+    //contrassegna un elemento di misuration come cancellato
+    public static final int DELETED_ELEM = -2;
+    //path della cartella principale
+    public final String ROOTPATH;
+    //lista predisposta a conenere le path assolute di tutte
+    //le cartelle ricorsivamente
     public List<File> directories = new ArrayList<>();
-
+    //misurazione calcolate dall'analisi
     public int[][] misuration;
-
+    //lista predisposta a contenere tutte le immagini presenti in ROOTPATH
     public List<File> images;
-
+    //si tratta del quantitativo di immagini
     public int size;
-
+    //numero di immagini simili a un'immagine in base alla tolleranza
     public int[] similar;
-
-    public int percentage = 0;
+    //percentuale di processo
+    public float percentage = 0;
 
     public List<File> getImages() {
         List<File> fileslist = new ArrayList<>();
@@ -104,7 +108,7 @@ public class Deduplicatore extends MainFrame {
 
     public void deleteRow(int i) {
         for (int j = 0; j < size; j++) {
-            misuration[i][j] = DELETED_ROW;
+            misuration[i][j] = DELETED_ELEM;
         }
     }
 
@@ -114,10 +118,30 @@ public class Deduplicatore extends MainFrame {
             int simCnt = 0;
             for (int j = 0; j < size; j++) {
                 if (misuration[i][j] >= TOLLERANCE) {
-                    simCnt++;
+                    simCnt += misuration[i][j];
                 }
             }
             similar[i] = simCnt;
+        }
+    }
+    
+    public void removeRedundantFiles(){
+        for (int i = 0; i < size; i++) {
+            if(IntStream.of(misuration[i]).anyMatch(x -> x == -1)){
+                for (int j = 0; j < size; j++) {
+                    if(misuration[i][j] != -1){
+                        if(misuration[i][j] < TOLLERANCE){
+                            misuration[i][j] = DELETED_ELEM;
+                        }else{
+                            for (int k = 0; k < size; k++) {
+                                if(misuration[i][j] > misuration[k][j] && i != k && misuration[k][j] != -1){
+                                    misuration[k][j] = DELETED_ELEM;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     
@@ -155,7 +179,7 @@ public class Deduplicatore extends MainFrame {
                     timer = System.currentTimeMillis() - timer;
                     float increment = (float) ((float) timer / (float) ((float) timer * (float) numberOfOperation)) * (float) 100;
                     //System.out.println("timer" + timer + "totTimer, " + (timer * numberOfOperation) + "Increment, " + increment);
-                    percentage = percentage + Math.round(increment);
+                    percentage = percentage + increment;
                     //System.out.println("Percentuale " + percentage);
                     raisePercChange();
                     
@@ -163,6 +187,7 @@ public class Deduplicatore extends MainFrame {
             }
         }
         removeRedundantSeries();
+        removeRedundantFiles();
         for (int[] i : misuration) {
             for (int j : i) {
                 System.out.printf("%03d ", j);
@@ -181,12 +206,12 @@ public class Deduplicatore extends MainFrame {
         String report = "";
 
         for (int i = 0; i < misuration.length; i++) {
-            if (misuration[i][0] != DELETED_ROW) {
+            if (IntStream.of(misuration[i]).anyMatch(x -> x == -1)) {
                 report += images.get(i).getName() + System.lineSeparator() + System.lineSeparator();       
                 for (int j = 0; j < misuration.length; j++) {
                     int misure = misuration[i][j];
                     if (misure >= Deduplicatore.TOLLERANCE) {
-                        report += images.get(j).getName() + System.lineSeparator();
+                        report += "\t-" + images.get(j).getName() + System.lineSeparator();
                     }
                 }
                 report += System.lineSeparator();
@@ -203,7 +228,7 @@ public class Deduplicatore extends MainFrame {
 
     public void startProgram(Deduplicatore d) {
         try {
-            d.getDirectories(d.rootPath);
+            d.getDirectories(d.ROOTPATH);
             images = d.getImages();
             analyseImage();
         } catch (NullPointerException e) {
@@ -212,7 +237,7 @@ public class Deduplicatore extends MainFrame {
     }
 
     public Deduplicatore(String root) {
-        rootPath = root;
+        ROOTPATH = root;
         directories.add(new File(root));
     }
 }
