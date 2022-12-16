@@ -7,7 +7,6 @@ import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -16,16 +15,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SpinnerNumberModel;
 import static javax.swing.SwingUtilities.updateComponentTreeUI;
-import javax.swing.border.LineBorder;
 
 /**
  * Pannello che mostra le analisi sulle immagini
@@ -56,7 +52,7 @@ public class ImageMenuPanel extends JPanel {
         filesPanel.removeAll();
 
         for (int i = 0; i < dec.misuration.length; i++) {
-            if (dec.misuration[i][0] != Deduplicatore.DELETED_ROW) {
+            if (IntStream.of(dec.misuration[i]).anyMatch(x -> x == -1)) {
                 JButton button = new JButton(dec.images.get(i).getName());
                 seriesPanel.add(button);
 
@@ -72,7 +68,6 @@ public class ImageMenuPanel extends JPanel {
         SpinnerNumberModel model = new SpinnerNumberModel(0,0,seriesPanel.getComponentCount(),1);
         seriesSpinner.setModel(model);
         serieButtons = seriesPanel.getComponents();
-        //seriesScrollPane.setViewportBorder(new LineBorder(Color.RED));
     }
 
     private void seriesButtonPressedEvent(java.awt.event.ActionEvent evt) {
@@ -161,18 +156,17 @@ public class ImageMenuPanel extends JPanel {
 
     private void scaleImage(File f) throws IOException {
         BufferedImage img = ImageIO.read(f);
-        int min = Math.min(img.getHeight(), img.getWidth());
-        if (min == img.getHeight()) {
-            min = imageLabel.getHeight();
-        } else {
-            min = imageLabel.getWidth();
+        int w;
+        int h;
+        int max = Math.max(img.getHeight(), img.getWidth());
+        if(max == img.getWidth()){
+            w = imageLabel.getWidth();
+            h = (int)((((float)img.getHeight()) / (float)img.getWidth()) * w);
+        }else{
+            h = imageLabel.getHeight();
+            w = (int)((((float)img.getWidth()) / (float)img.getHeight()) * h);
         }
-        System.out.println("img h "+ img.getHeight());
-        System.out.println("img w "+img.getWidth());
-        System.out.println("Label H " + imageLabel.getHeight());
-        System.out.println("Label W " + imageLabel.getWidth());
-        
-        Image dimg = img.getScaledInstance(min, min, Image.SCALE_SMOOTH);
+        Image dimg = img.getScaledInstance(Math.round(w), Math.round(h), Image.SCALE_DEFAULT);
         imageLabel.setIcon(new ImageIcon(dimg));
     }
 
@@ -286,14 +280,17 @@ public class ImageMenuPanel extends JPanel {
 
         picturePanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
+        imagePanel.setPreferredSize(new java.awt.Dimension(486, 486));
         imagePanel.setLayout(new java.awt.BorderLayout());
+
+        imageLabel.setPreferredSize(new java.awt.Dimension(486, 486));
         imagePanel.add(imageLabel, java.awt.BorderLayout.CENTER);
 
         javax.swing.GroupLayout picturePanelLayout = new javax.swing.GroupLayout(picturePanel);
         picturePanel.setLayout(picturePanelLayout);
         picturePanelLayout.setHorizontalGroup(
             picturePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(imgnameLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 484, Short.MAX_VALUE)
+            .addComponent(imgnameLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(picturePanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(imagePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -304,7 +301,7 @@ public class ImageMenuPanel extends JPanel {
             .addGroup(picturePanelLayout.createSequentialGroup()
                 .addComponent(imgnameLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(imagePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(imagePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 532, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -324,7 +321,7 @@ public class ImageMenuPanel extends JPanel {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(seriesPanelContainer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(filesPanelContainer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jToolBar1, javax.swing.GroupLayout.DEFAULT_SIZE, 500, Short.MAX_VALUE)
+            .addComponent(jToolBar1, javax.swing.GroupLayout.DEFAULT_SIZE, 581, Short.MAX_VALUE)
             .addComponent(picturePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents

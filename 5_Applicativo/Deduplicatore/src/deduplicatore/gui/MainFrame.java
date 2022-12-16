@@ -3,17 +3,10 @@ package deduplicatore.gui;
 import deduplicatore.Deduplicatore;
 import java.awt.Desktop;
 import javax.swing.*;
-import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
-import javax.management.Notification;
 import static javax.swing.SwingUtilities.updateComponentTreeUI;
 
 /**
@@ -31,7 +24,7 @@ public class MainFrame extends JFrame {
 
     public MainFrame() {
         initComponents();
-        this.setSize(1050, 700);
+        this.setSize(1100, 700);
     }
                         
     private void initComponents() {
@@ -180,15 +173,15 @@ public class MainFrame extends JFrame {
     }
     
     private void percentageChange(java.beans.PropertyChangeEvent evt) {
-        int perc = 0;
+        float perc = 0;
         jLabel2.setText(perc + "%");
         Object percentage = evt.getNewValue();
-        if (percentage instanceof Integer) {
-            perc = (Integer)percentage;
-            System.out.println("Percentuale: " + perc + "%");
+        if (percentage instanceof Float) {
+            perc = (Float)percentage;
+            System.out.println("Percentuale: " + Math.round(perc) + "%");
             jLabel2.setText(perc +  ""); // genera errore
             jLabel2.updateUI();
-            //updateComponentTreeUI(this);
+            updateComponentTreeUI(this);
             //repaint();
         }
     }

@@ -31,7 +31,7 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Component id="seriesPanelContainer" alignment="0" max="32767" attributes="0"/>
           <Component id="filesPanelContainer" alignment="0" max="32767" attributes="0"/>
-          <Component id="jToolBar1" alignment="0" pref="500" max="32767" attributes="0"/>
+          <Component id="jToolBar1" alignment="0" pref="581" max="32767" attributes="0"/>
           <Component id="picturePanel" alignment="0" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
@@ -190,7 +190,7 @@
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Component id="imgnameLabel" alignment="0" pref="484" max="32767" attributes="0"/>
+              <Component id="imgnameLabel" alignment="0" max="32767" attributes="0"/>
               <Group type="102" alignment="0" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
                   <Component id="imagePanel" max="32767" attributes="0"/>
@@ -203,7 +203,7 @@
               <Group type="102" alignment="0" attributes="0">
                   <Component id="imgnameLabel" min="-2" pref="27" max="-2" attributes="0"/>
                   <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
-                  <Component id="imagePanel" max="32767" attributes="0"/>
+                  <Component id="imagePanel" pref="532" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -212,10 +212,20 @@
         <Component class="javax.swing.JLabel" name="imgnameLabel">
         </Component>
         <Container class="javax.swing.JPanel" name="imagePanel">
+          <Properties>
+            <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[486, 486]"/>
+            </Property>
+          </Properties>
 
           <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
           <SubComponents>
             <Component class="javax.swing.JLabel" name="imageLabel">
+              <Properties>
+                <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[486, 486]"/>
+                </Property>
+              </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
                   <BorderConstraints direction="Center"/>
