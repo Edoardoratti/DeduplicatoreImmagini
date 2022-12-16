@@ -3,12 +3,19 @@ package deduplicatore.gui;
 import deduplicatore.Deduplicatore;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -16,6 +23,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SpinnerNumberModel;
 import static javax.swing.SwingUtilities.updateComponentTreeUI;
 import javax.swing.border.LineBorder;
 
@@ -25,27 +33,34 @@ import javax.swing.border.LineBorder;
  * @author edoardo.ratti
  */
 public class ImageMenuPanel extends JPanel {
+
+    private Deduplicatore dec;
+    private Component[] imageButtons;
+    private Component[] serieButtons;
+    private int buttonSelectedIndex;
+    private Component buttonSelected;
+    private String root = "";
     
-    Deduplicatore dec;
-    
+
     public ImageMenuPanel() {
         initComponents();
     }
-    
-    public void setDeduplicatore(Deduplicatore d){
+
+    public void setDeduplicatore(Deduplicatore d) {
         dec = d;
     }
-
+    
     public void displaySeries() {
         updateComponentTreeUI(this.getParent());
         seriesPanel.removeAll();
         filesPanel.removeAll();
 
         for (int i = 0; i < dec.misuration.length; i++) {
-            if (dec.misuration[i][0] != -2) {
+            if (dec.misuration[i][0] != Deduplicatore.DELETED_ROW) {
                 JButton button = new JButton(dec.images.get(i).getName());
                 seriesPanel.add(button);
 
+                //Creazione evento
                 button.addActionListener(new java.awt.event.ActionListener() {
                     @Override
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -54,58 +69,113 @@ public class ImageMenuPanel extends JPanel {
                 });
             }
         }
-
+        SpinnerNumberModel model = new SpinnerNumberModel(0,0,seriesPanel.getComponentCount(),1);
+        seriesSpinner.setModel(model);
+        serieButtons = seriesPanel.getComponents();
         //seriesScrollPane.setViewportBorder(new LineBorder(Color.RED));
     }
 
-    private void seriesButtonPressedEvent(java.awt.event.ActionEvent evt){
-            updateComponentTreeUI(this.getParent());
-            
-            //Index finding
-            String name = ((JButton)evt.getSource()).getText();
-            File file = new File(name);
-            int index = 0;
-            for (File f : dec.images) {
-                if(f.getName().equals(file.getName())){
-                    index = dec.images.lastIndexOf(f);
-                }
+    private void seriesButtonPressedEvent(java.awt.event.ActionEvent evt) {
+        updateComponentTreeUI(this.getParent());
+        int index = getFileIndex(((JButton) evt.getSource()).getText());
+        buttonSelectedIndex = index;
+        switchJToolBarButtons(true);
+        imgdeleteButton.setEnabled(false);
+        filesPanel.removeAll();
+        for (int i = 0; i < dec.misuration.length; i++) {
+            int misure = dec.misuration[index][i];
+            if (misure >= Deduplicatore.TOLLERANCE) {
+                JButton button = new JButton(dec.images.get(i).getName());
+                filesPanel.add(button);
+                button.addActionListener(new java.awt.event.ActionListener() { //Creazione evento
+                    @Override
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        showImage(evt);
+                        buttonSelectedIndex = getFileIndex(((JButton) evt.getSource()).getText());
+                        buttonSelected = button;
+                        imgdeleteButton.setEnabled(true);
+                    }
+                });
             }
-            //buttons creation
-            filesPanel.removeAll();
-            for (int i = 0; i < dec.misuration.length; i++) {
-                int misure = dec.misuration[index][i];
-                if (misure >= Deduplicatore.TOLLERANCE) {
-                    JButton button = new JButton(dec.images.get(i).getName());
-                    filesPanel.add(button);
-                }
-            }
+        }
+        imageButtons = filesPanel.getComponents();//components array
         try {
             //image display
-            ScaleImage(dec.images.get(index));
-//            BufferedImage img = ImageIO.read(dec.images.get(index));
-//            Image dimg = img.getScaledInstance(imageLabel.getWidth(), imageLabel.getHeight(), Image.SCALE_SMOOTH);
-//            imageLabel.setIcon(new ImageIcon(dimg));
+            scaleImage(dec.images.get(index));
         } catch (IOException ex) {
-            Logger.getLogger(ImageMenuPanel.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IllegalArgumentException("Image not displayable");
         }
     }
     
-    private void ScaleImage(File f) throws IOException{
-        BufferedImage img = ImageIO.read(f);
-        Image dimg = null;
-        int min = Math.min(img.getHeight(), img.getWidth());
-        System.out.println(img.getHeight());
-        System.out.println(img.getWidth());
-        if(min == img.getHeight()){
-            dimg = img.getScaledInstance(imageLabel.getWidth(), imageLabel.getWidth(), Image.SCALE_SMOOTH);
-        }else{
-            
-            dimg = img.getScaledInstance(imageLabel.getHeight(), imageLabel.getHeight(), Image.SCALE_SMOOTH);
+    private void filterImages(){
+        String text = filesSearchField.getText();
+        for (Component button : imageButtons) {
+            if (((JButton) button).getText().contains(text)) {
+                button.setVisible(true);
+            } else {
+                button.setVisible(false);
+            }
         }
+    }
+    
+    private void filterSeries(){
+        Object number = seriesSpinner.getValue();
+        if((Integer)number == 0){
+            for(Component button : serieButtons){
+                button.setVisible(true);
+            }
+        }else{
+            for (Component button : serieButtons) {
+                button.setVisible(false);
+            }
+            serieButtons[(Integer)number - 1].setVisible(true);
+        }
+    }
+    
+    public void switchJToolBarButtons(boolean b) {
+        reportButton.setEnabled(b);
+        imgdeleteButton.setEnabled(b);
+        imgdlButton.setEnabled(b);
+    }
+
+    private void showImage(java.awt.event.ActionEvent evt){
+        try {
+            scaleImage(dec.images.get(getFileIndex(((JButton) evt.getSource()).getText())));
+        } catch (IOException ex) {
+           throw new IllegalArgumentException("Immagine invalida");
+        }
+    }
+    
+    private int getFileIndex(String name){
+            File file = new File(name);
+            
+            for (File f : dec.images) {
+                if (f.getName().equals(file.getName())) {
+                    return dec.images.lastIndexOf(f);
+                }
+            }
+        
+            return -1; //impossible case
+    }
+    
+
+    private void scaleImage(File f) throws IOException {
+        BufferedImage img = ImageIO.read(f);
+        int min = Math.min(img.getHeight(), img.getWidth());
+        if (min == img.getHeight()) {
+            min = imageLabel.getHeight();
+        } else {
+            min = imageLabel.getWidth();
+        }
+        System.out.println("img h "+ img.getHeight());
+        System.out.println("img w "+img.getWidth());
+        System.out.println("Label H " + imageLabel.getHeight());
+        System.out.println("Label W " + imageLabel.getWidth());
+        
+        Image dimg = img.getScaledInstance(min, min, Image.SCALE_SMOOTH);
         imageLabel.setIcon(new ImageIcon(dimg));
     }
 
-    @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -127,6 +197,13 @@ public class ImageMenuPanel extends JPanel {
         imageLabel = new javax.swing.JLabel();
 
         seriesPanelContainer.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+        seriesSpinner.setModel(new javax.swing.SpinnerNumberModel(0, 0, null, 1));
+        seriesSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                seriesSpinnerStateChanged(evt);
+            }
+        });
 
         seriesScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
@@ -153,10 +230,9 @@ public class ImageMenuPanel extends JPanel {
 
         filesPanelContainer.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
-        filesSearchField.setText("jTextField1");
-        filesSearchField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                filesSearchFieldActionPerformed(evt);
+        filesSearchField.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                filesSearchFieldKeyReleased(evt);
             }
         });
 
@@ -182,17 +258,33 @@ public class ImageMenuPanel extends JPanel {
         jToolBar1.setOrientation(javax.swing.SwingConstants.VERTICAL);
 
         reportButton.setText("Report");
+        reportButton.setEnabled(false);
+        reportButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                reportButtonActionPerformed(evt);
+            }
+        });
         jToolBar1.add(reportButton);
 
         imgdeleteButton.setText("Delete");
+        imgdeleteButton.setEnabled(false);
+        imgdeleteButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                imgdeleteButtonActionPerformed(evt);
+            }
+        });
         jToolBar1.add(imgdeleteButton);
 
-        imgdlButton.setText("Download");
+        imgdlButton.setEnabled(false);
+        imgdlButton.setLabel("Open");
+        imgdlButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                imgdlButtonActionPerformed(evt);
+            }
+        });
         jToolBar1.add(imgdlButton);
 
         picturePanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-
-        imgnameLabel.setText("jLabel1");
 
         imagePanel.setLayout(new java.awt.BorderLayout());
         imagePanel.add(imageLabel, java.awt.BorderLayout.CENTER);
@@ -237,9 +329,44 @@ public class ImageMenuPanel extends JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void filesSearchFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_filesSearchFieldActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_filesSearchFieldActionPerformed
+    private void raiseDownloadImage(Path p) {
+        PropertyChangeEvent event = new PropertyChangeEvent(this, "c", 0, p);
+        PropertyChangeListener listener = this.getPropertyChangeListeners()[0];
+        listener.propertyChange(event);
+    }
+
+    private void seriesSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_seriesSpinnerStateChanged
+        filterSeries();
+    }//GEN-LAST:event_seriesSpinnerStateChanged
+
+    private void filesSearchFieldKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_filesSearchFieldKeyReleased
+        filterImages();
+    }//GEN-LAST:event_filesSearchFieldKeyReleased
+
+    private void reportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reportButtonActionPerformed
+        dec.outReport();
+    }//GEN-LAST:event_reportButtonActionPerformed
+
+    private void imgdeleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_imgdeleteButtonActionPerformed
+        Path p = Paths.get(dec.images.get(buttonSelectedIndex).getAbsolutePath());
+        try {
+            Files.deleteIfExists(p);
+            filesPanel.remove(buttonSelected);
+            updateComponentTreeUI(this.getParent());
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("Unexitstent path");
+        }
+    }//GEN-LAST:event_imgdeleteButtonActionPerformed
+
+    private void imgdlButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_imgdlButtonActionPerformed
+        Path p = Paths.get(dec.images.get(buttonSelectedIndex).getAbsolutePath());
+        try {
+            Desktop.getDesktop().open(new File(p.toString()));
+            //raiseDownloadImage(p);
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("Unexitstent path");
+        }
+    }//GEN-LAST:event_imgdlButtonActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -260,5 +387,4 @@ public class ImageMenuPanel extends JPanel {
     private javax.swing.JScrollPane seriesScrollPane;
     private javax.swing.JSpinner seriesSpinner;
     // End of variables declaration//GEN-END:variables
-
 }
