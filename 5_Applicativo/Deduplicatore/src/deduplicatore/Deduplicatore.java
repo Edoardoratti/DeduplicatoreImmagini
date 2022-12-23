@@ -204,7 +204,6 @@ public class Deduplicatore extends MainFrame {
 
     public void outReport() {
         String report = "";
-
         for (int i = 0; i < misuration.length; i++) {
             if (IntStream.of(misuration[i]).anyMatch(x -> x == -1)) {
                 report += images.get(i).getName() + System.lineSeparator() + System.lineSeparator();       

@@ -31,10 +31,10 @@ import static javax.swing.SwingUtilities.updateComponentTreeUI;
 public class ImageMenuPanel extends JPanel {
 
     private Deduplicatore dec;
-    private Component[] imageButtons;
-    private Component[] serieButtons;
-    private int buttonSelectedIndex;
-    private Component buttonSelected;
+    private Component[] imageButtons;//Contiente i pulsanti relativi alle immagini specifici di una serie
+    private Component[] serieButtons;//Contiene i pulsanti relativi alle serie
+    private int buttonSelectedIndex;//Indice del pulsante premuto corrente
+    private Component buttonSelected;//Pulsante corrente
     private String root = "";
     
 
@@ -69,6 +69,7 @@ public class ImageMenuPanel extends JPanel {
         seriesSpinner.setModel(model);
         serieButtons = seriesPanel.getComponents();
     }
+    
 
     private void seriesButtonPressedEvent(java.awt.event.ActionEvent evt) {
         updateComponentTreeUI(this.getParent());
@@ -359,7 +360,6 @@ public class ImageMenuPanel extends JPanel {
         Path p = Paths.get(dec.images.get(buttonSelectedIndex).getAbsolutePath());
         try {
             Desktop.getDesktop().open(new File(p.toString()));
-            //raiseDownloadImage(p);
         } catch (IOException ex) {
             throw new IllegalArgumentException("Unexitstent path");
         }

@@ -18,7 +18,7 @@ import static javax.swing.SwingUtilities.updateComponentTreeUI;
 public class MainFrame extends JFrame {
 
     private Deduplicatore dec;
-    private int buttonState = 0;
+    private int buttonState = 0; //Indica lo stato del pulsante tra start, stop e resume
     private boolean threadSuspended = false;
     private String root;
 
@@ -113,6 +113,7 @@ public class MainFrame extends JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
 
         Runnable analizzator = new Runnable() {
+            @Override
             public void run() {
                 root = jTextField1.getText();
                 root = "E://306//Immagini//Test//test//Test";
@@ -138,25 +139,15 @@ public class MainFrame extends JFrame {
             case 1:
                 jButton1.setText("Resume"); //stop statement
                 switchSuspend();
-                buttonState++;
-                
-//                synchronized (t) {
-//                    while (threadSuspended) {
-//                        try {
-//                            t.wait();
-//                        } catch (InterruptedException ex) {
-//                            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
-//                        }
-//                    }
-//                }   
-                t.suspend();
+                buttonState++; 
+                //t.suspend();
                 break;
 
             case 2:
                 jButton1.setText("Stop"); //resume statement
                 switchSuspend();
                 buttonState--;
-                t.resume();
+                //t.resume();
                 break;
             default:
                 break;
@@ -192,7 +183,7 @@ public class MainFrame extends JFrame {
             
             if(obj instanceof Path){
                 Path o = Paths.get(obj.toString());
-//                System.out.println("File to Copy: " + o);
+                System.out.println("File to Copy: " + o);                        //non mettere nella doc
                  Desktop.getDesktop().open(new File(o.toString()));
             }
         } catch (IOException ex) {
