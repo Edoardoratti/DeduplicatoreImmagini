@@ -116,7 +116,7 @@ public class MainFrame extends JFrame {
             @Override
             public void run() {
                 root = jTextField1.getText();
-                root = "E://306//Immagini//Test//test//Test";
+                //root = "E://306//Immagini//Test//test//Test";
                 //root = "E://306//Immagini//Test";
                 //root = "E://306//Immagini//Test//test";
                 dec = new Deduplicatore(root);
