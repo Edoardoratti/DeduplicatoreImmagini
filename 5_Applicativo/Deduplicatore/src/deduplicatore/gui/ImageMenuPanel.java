@@ -1,11 +1,8 @@
 package deduplicatore.gui;
 
 import deduplicatore.Deduplicatore;
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Desktop;
-import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
